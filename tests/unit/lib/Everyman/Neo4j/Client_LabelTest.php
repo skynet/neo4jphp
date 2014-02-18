@@ -147,6 +147,33 @@ class Client_LabelTest extends \PHPUnit_Framework_TestCase
 		$this->client->getNodesForLabel($label, $propertyName, $propertyValue);
 	}
 
+	public function testGetNodesForLabel_PropertyWithIntegerValueGiven_CallsClientMethod()
+	{
+		$labelName = 'FOOBAR';
+		$propertyName = 'baz';
+		$propertyValue = 1;
+		$label = new Label($this->client, $labelName);
+
+		$returnData = array(
+			array(
+				"self" => "http://localhost:7474/db/data/relationship/56",
+				"data" => array($propertyName => $propertyValue),
+			),
+		);
+
+		$this->transport->expects($this->once())
+			->method('get')
+			->with("/label/{$labelName}/nodes?{$propertyName}={$propertyValue}")
+			->will($this->returnValue(array('code'=>200,'data'=>$returnData)));
+
+		$nodes = $this->client->getNodesForLabel($label, $propertyName, $propertyValue);
+		self::assertInstanceOf('Everyman\Neo4j\Query\Row', $nodes);
+		self::assertEquals(1, count($nodes));
+
+		self::assertInstanceOf('Everyman\Neo4j\Node', $nodes[0]);
+		self::assertEquals(56,  $nodes[0]->getId());
+	}
+
 	public function testGetNodesForLabel_PropertyNameWithoutValue_ThrowsException()
 	{
 		$labelName = 'FOOBAR';
@@ -273,7 +300,7 @@ class Client_LabelTest extends \PHPUnit_Framework_TestCase
 	{
 		$nodeId = 123;
 		$labelAName = 'FOOBAR';
-		$labelBName = 'BAZQUX';
+		$labelBName = 'BAZ QUX';
 
 		$node = new Node($this->client);
 		$node->setId($nodeId);
@@ -281,9 +308,9 @@ class Client_LabelTest extends \PHPUnit_Framework_TestCase
 		$labelA = $this->client->makeLabel($labelAName);
 		$labelB = $this->client->makeLabel($labelBName);
 
-		$expectedLabels = array('LOREMIPSUM', 'FOOBAR', 'BAZQUX');
+		$expectedLabels = array('LOREMIPSUM', $labelAName, $labelBName);
 
-		$expectedQuery = "START n=node({nodeId}) SET n:{$labelAName}:{$labelBName} RETURN labels(n) AS labels";
+		$expectedQuery = "START n=node({nodeId}) SET n:`{$labelAName}`:`{$labelBName}` RETURN labels(n) AS labels";
 		$expectedParams = array("nodeId" => $nodeId);
 
 		$this->transport->expects($this->any())
@@ -354,6 +381,35 @@ class Client_LabelTest extends \PHPUnit_Framework_TestCase
 		$this->client->addLabels($node, array($labelA));
 	}
 
+	public function testAddLabels_NodeIdZero_DoesNotThrowException()
+	{
+		$nodeId = 0;
+		$labelAName = 'FOOBAR';
+
+		$node = new Node($this->client);
+		$node->setId($nodeId);
+
+		$labelA = $this->client->makeLabel($labelAName);
+
+		$expectedQuery = "START n=node({nodeId}) SET n:`{$labelAName}` RETURN labels(n) AS labels";
+		$expectedParams = array("nodeId" => $nodeId);
+
+		$this->transport->expects($this->once())
+			->method('post')
+			->with('/cypher', array(
+				'query'  => $expectedQuery,
+				'params' => $expectedParams,
+			))
+			->will($this->returnValue(array('code'=>200,'data'=>array(
+				'columns' => array('labels'),
+				'data' => array(array(array($labelAName))),
+			))));
+
+		$resultLabels = $this->client->addLabels($node, array($labelA));
+		self::assertEquals(1, count($resultLabels));
+		self::assertEquals($labelAName, $resultLabels[0]->getName());
+	}
+
 	public function testAddLabels_NonLabelGiven_ThrowsException()
 	{
 		$labelAName = 'FOOBAR';
@@ -385,7 +441,7 @@ class Client_LabelTest extends \PHPUnit_Framework_TestCase
 	{
 		$nodeId = 123;
 		$labelAName = 'FOOBAR';
-		$labelBName = 'BAZQUX';
+		$labelBName = 'BAZ QUX';
 
 		$node = new Node($this->client);
 		$node->setId($nodeId);
@@ -393,9 +449,9 @@ class Client_LabelTest extends \PHPUnit_Framework_TestCase
 		$labelA = $this->client->makeLabel($labelAName);
 		$labelB = $this->client->makeLabel($labelBName);
 
-		$expectedLabels = array('LOREMIPSUM', 'FOOBAR', 'BAZQUX');
+		$expectedLabels = array('LOREMIPSUM', $labelAName, $labelBName);
 
-		$expectedQuery = "START n=node({nodeId}) REMOVE n:{$labelAName}:{$labelBName} RETURN labels(n) AS labels";
+		$expectedQuery = "START n=node({nodeId}) REMOVE n:`{$labelAName}`:`{$labelBName}` RETURN labels(n) AS labels";
 		$expectedParams = array("nodeId" => $nodeId);
 
 		$this->transport->expects($this->any())

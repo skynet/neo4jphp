@@ -30,7 +30,7 @@ class SetLabels extends ExecuteCypherQuery
 		}
 
 		$nodeId = $node->getId();
-		if (!$nodeId) {
+		if (!is_numeric($nodeId)) {
 			throw new \InvalidArgumentException("Cannot set labels on an unsaved node");
 		}
 
@@ -42,7 +42,7 @@ class SetLabels extends ExecuteCypherQuery
 			if (!($label instanceof Label)) {
 				throw new \InvalidArgumentException("Cannot set a non-label");
 			}
-			return $label->getName();
+			return "`".$label->getName()."`";
 		}, $labels));
 
 		$setCommand = $remove ? 'REMOVE' : 'SET';
@@ -73,4 +73,3 @@ class SetLabels extends ExecuteCypherQuery
 		return $nodeLabels;
 	}
 }
-

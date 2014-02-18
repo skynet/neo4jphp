@@ -18,21 +18,30 @@ Install
 1. From the command line `echo '{"require":{"everyman/neo4jphp":"dev-master"}}' > composer.json && composer install`
 1. In your PHP script `require("vendor/autoload.php");`
 
-### Using pre-packaged PHAR
-1. Download latest PHAR from http://github.com/downloads/jadell/neo4jphp/neo4jphp.phar
-1. In your PHP script `require("phar://neo4jphp.phar");`
+Connection Test
+---------------
+Create a script named `neo4jphp_connect_test.php`:
 
-Connection Test With PHAR
--------------------------
-From the command line, execute the following:
+```php
+    <?php
+    require('vendor/autoload.php');
+    
+    $client = new Everyman\Neo4j\Client('localhost', 7474);
+    print_r($client->getServerInfo());
+```
 
-    > php neo4jphp.phar localhost
+Change `localhost` or `7474` to the host name and port of your Neo4j instance.
 
-Change localhost to the host name of your Neo4j instance.  Port defaults to 7474, or can be specified as the second parameter after the host name.
+Execute the script:
 
-Execute the following to see more command line options:
+    > php neo4jphp_connect_test.php
 
-    > php neo4jphp.phar
+If you see your server's information, then you have successfully connected!
+
+
+Get Started
+-----------
+Full documentation on all the features of Neo4jPHP is available on the wiki: https://github.com/jadell/neo4jphp/wiki
 
 
 Contributions
@@ -41,13 +50,33 @@ http://github.com/jadell/neo4jphp/graphs/contributors
 
 All contributions are welcome! If you wish to contribute, please read the following guidelines:
 
+* Before implementing new features, [open an issue](https://github.com/jadell/neo4jphp/issues) describing the feature.
 * Include unit tests for any bug fixes or new features.
 * Include only one bug fix or new feature per pull request.
 * Make sure all unit tests run before submitting a pull request.
 * Follow the coding style of the existing code: tabs for indentation, class/method braces on newlines, spaces after commas, etc.
 * Contributing code means that you agree that any contributed code, documentation, or other artifacts may be released under the same license as the rest of the library.
 
-Special thanks to:
+### Quick Contributor Setup
+Install the developer tools:
+
+    > composer install --dev
+    
+After making your changes, run the unit tests and code style checker:
+
+    > vendor/bin/phing ci
+    
+Run only unit tests:
+
+    > vendor/bin/phing test
+    
+Run only style checker:
+
+    > vendor/bin/phing cs
+
+Pull requests will not be accepted unless all tests pass and all code meets the existing style guidelines.
+
+### Special Thanks
 * Jacob Hansson <jacob@voltvoodoo.com> - Cypher query support
 * Nigel Small <nigel@nigelsmall.name> - GEOFF import/export
   * [http://py2neo.org/](http://py2neo.org/)
